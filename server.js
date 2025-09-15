@@ -4,6 +4,7 @@ import cors from 'cors'
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { toyRoutes } from './api/toy/toy.routes.js'
+import { reviewRoutes } from './api/review/review.routes.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -18,7 +19,7 @@ app.use(cookieParser())
 app.use(express.json())
 app.use(express.static('public'))
 app.use('/api/toy', toyRoutes)
-
+app.use('/api/review', reviewRoutes)
 
 if (process.env.NODE_ENV === 'production') {
     // Express serve static files on production environment
