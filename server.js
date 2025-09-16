@@ -25,7 +25,6 @@ const devOrigins = [
     'http://localhost:3000',
 ]
 
-// e.g. ORIGIN="https://mistertoy-frontend-dazw.onrender.com,http://localhost:5173"
 const origins = isProd
     ? (process.env.ORIGIN || '')
         .split(',')
@@ -53,7 +52,7 @@ app.use('/api/toy', toyRoutes)
 app.use('/api/review', reviewRoutes)
 
 app.get(/^\/(?!api).*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'))
+    res.sendFile(path.resolve(__dirname, 'public', 'index.html'))
 })
 
 const port = process.env.PORT || 3030
