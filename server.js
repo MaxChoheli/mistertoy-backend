@@ -1,6 +1,5 @@
 import express from 'express'
 import cookieParser from 'cookie-parser'
-import cors from 'cors'
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { toyRoutes } from './api/toy/toy.routes.js'
@@ -12,8 +11,6 @@ import { logger } from './services/logger.service.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-
-logger.info('server.js loaded...')
 
 const app = express()
 const isProd = process.env.NODE_ENV === 'production'
@@ -33,8 +30,19 @@ const origins = isProd
     : devOrigins
 
 app.set('trust proxy', 1)
-app.use(cors({ origin: origins, credentials: true }))
-app.options('*', cors({ origin: origins, credentials: true }))
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin
+    if (origin && origins.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin)
+        res.header('Access-Control-Allow-Credentials', 'true')
+        res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+        res.header('Vary', 'Origin')
+    }
+    if (req.method === 'OPTIONS') return res.sendStatus(204)
+    next()
+})
 
 app.use(cookieParser())
 app.use(express.json())
@@ -51,9 +59,9 @@ app.use('/api/car', carRoutes)
 app.use('/api/toy', toyRoutes)
 app.use('/api/review', reviewRoutes)
 
-app.get(/^\/(?!api).*/, (req, res) => {
+app.get(/^(?!\/api\/).*/, (req, res) => {
     res.sendFile(path.resolve(__dirname, 'public', 'index.html'))
 })
 
 const port = process.env.PORT || 3030
-app.listen(port, () => logger.info('Server is running on port: ' + port))
+app.listen(port, () => logger.info(`Server listening on ${port}`))
