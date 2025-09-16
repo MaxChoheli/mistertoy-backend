@@ -15,6 +15,21 @@ const __dirname = dirname(__filename)
 const app = express()
 const isProd = process.env.NODE_ENV === 'production'
 
+app.get('/api/health', async (req, res) => {
+    try {
+        const { dbService } = await import('./services/db.service.js')
+        const toyCol = await dbService.getCollection('toy')
+        const userCol = await dbService.getCollection('user')
+        const toyCount = await toyCol.countDocuments()
+        const userCount = await userCol.countDocuments()
+        res.send({ ok: true, toyCount, userCount })
+    } catch (err) {
+        console.error('HEALTH ERROR:', err)
+        res.status(500).send({ ok: false, error: String(err?.message || err) })
+    }
+})
+
+
 const devOrigins = [
     'http://127.0.0.1:5173',
     'http://localhost:5173',

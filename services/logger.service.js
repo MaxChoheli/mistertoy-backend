@@ -1,52 +1,24 @@
 import fs from 'fs'
 
 const logsDir = './logs'
-if (!fs.existsSync(logsDir)) {
-    fs.mkdirSync(logsDir)
-}
+if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir)
 
 export const logger = {
-    debug(...args) {
-        if (process.env.NODE_ENV === 'production') return
-        _doLog('DEBUG', ...args)
-    },
-    info(...args) {
-        _doLog('INFO', ...args)
-    },
-    warn(...args) {
-        _doLog('WARN', ...args)
-    },
-    error(...args) {
-        _doLog('ERROR', ...args)
-    }
+    debug(...args) { if (process.env.NODE_ENV === 'production') return; _doLog('DEBUG', ...args) },
+    info(...args) { _doLog('INFO', ...args) },
+    warn(...args) { _doLog('WARN', ...args) },
+    error(...args) { _doLog('ERROR', ...args) },
 }
 
-function _getTime() {
-    let now = new Date()
-    return now.toLocaleString('he')
-}
-
-function _isError(e) {
-    return e && e.stack && e.message
-}
-
+function _getTime() { return new Date().toLocaleString('he') }
+function _isError(e) { return e && e.stack && e.message }
 function _doLog(level, ...args) {
-
     const strs = args.map(arg => {
-        if (typeof arg === 'string') {
-        } else if (_isError(arg)) {
-        } else if (arg instanceof Promise) {
-            arg = 'Promise'
-        } else {
-            arg = JSON.stringify(arg)
-        }
-        return arg
+        if (typeof arg === 'string') return arg
+        if (_isError(arg)) return `${arg.message}\n${arg.stack}`
+        try { return JSON.stringify(arg) } catch { return String(arg) }
     })
-
-    var line = strs.join(' | ')
-    line = `${_getTime()} - ${level} - ${line} \n`
+    const line = `${_getTime()} - ${level} - ${strs.join(' | ')}\n`
     console.log(line)
-    fs.appendFile('./logs/backend.log', line, (err) => {
-        if (err) console.log('FATAL: cannot write to log file')
-    })
+    fs.appendFile('./logs/backend.log', line, () => { })
 }

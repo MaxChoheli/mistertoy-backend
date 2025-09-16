@@ -1,10 +1,7 @@
 import configProd from './prod.js'
 import configDev from './dev.js'
 
-const base =
-    process.env.NODE_ENV === 'production'
-        ? configProd
-        : configDev
+const base = process.env.NODE_ENV === 'production' ? configProd : configDev
 
 const origins = ((process.env.ORIGIN ?? base.origins) || '')
     .toString()
@@ -12,7 +9,7 @@ const origins = ((process.env.ORIGIN ?? base.origins) || '')
     .map(s => s.trim())
     .filter(Boolean)
 
-const cfg = {
+export const config = {
     ...base,
     isGuestMode: true,
     port: Number(process.env.PORT) || base.port || 3030,
@@ -20,6 +17,4 @@ const cfg = {
     dbName: process.env.DB_NAME || base.dbName || '',
     origins,
 }
-
-export const config = cfg
-export default cfg
+export default config
