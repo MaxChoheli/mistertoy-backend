@@ -52,8 +52,8 @@ app.use('/api/car', carRoutes)
 app.use('/api/toy', toyRoutes)
 app.use('/api/review', reviewRoutes)
 
-app.get('/*all', (req, res) => {
-    res.sendFile(path.resolve('public/index.html'))
+app.get(/^\/(?!api).*/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'))
 })
 
 const port = process.env.PORT || 3030
