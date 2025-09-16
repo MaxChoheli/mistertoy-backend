@@ -1,5 +1,6 @@
 import { MongoClient } from 'mongodb'
 import { logger } from './logger.service.js'
+import config from '../config/index.js'
 
 let client
 let db
@@ -10,12 +11,11 @@ export const dbService = {
 
 async function connect() {
 	if (db) return db
-	const uri = process.env.MONGO_URL
-	if (!uri) throw new Error('Missing MONGO_URL')
+	if (!config.dbURL) throw new Error('Missing config.dbURL (MONGO_URL)')
 	try {
-		client = new MongoClient(uri)
+		client = new MongoClient(config.dbURL)
 		await client.connect()
-		db = client.db()
+		db = config.dbName ? client.db(config.dbName) : client.db()
 		logger.info('Connected to MongoDB')
 		return db
 	} catch (err) {
