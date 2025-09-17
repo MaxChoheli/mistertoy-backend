@@ -15,7 +15,8 @@ export async function addReview(req, res) {
         const review = await reviewService.add({ ...req.body, userId: user._id })
         res.send(review)
     } catch (err) {
-        res.status(500).send({ err: 'Failed to add review' })
+        const code = err.message === 'Bad id' ? 400 : 500
+        res.status(code).send({ err: 'Failed to add review' })
     }
 }
 
@@ -25,7 +26,7 @@ export async function removeReview(req, res) {
         if (!deleted) return res.status(404).send({ err: 'Not found' })
         res.send({ msg: 'Removed' })
     } catch (err) {
-        const code = err.message === 'Not allowed' ? 403 : 500
+        const code = err.message === 'Not allowed' ? 403 : err.message === 'Bad id' ? 400 : 500
         res.status(code).send({ err: err.message })
     }
 }

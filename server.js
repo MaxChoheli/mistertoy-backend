@@ -1,82 +1,58 @@
 import express from 'express'
 import cookieParser from 'cookie-parser'
+import cors from 'cors'
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { toyRoutes } from './api/toy/toy.routes.js'
 import { reviewRoutes } from './api/review/review.routes.js'
 import { authRoutes } from './api/auth/auth.routes.js'
 import { userRoutes } from './api/user/user.routes.js'
-import { carRoutes } from './api/car/car.routes.js'
 import { logger } from './services/logger.service.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 const app = express()
-const isProd = process.env.NODE_ENV === 'production'
-
-app.get('/api/health', async (req, res) => {
-    try {
-        const { dbService } = await import('./services/db.service.js')
-        const toyCol = await dbService.getCollection('toy')
-        const userCol = await dbService.getCollection('user')
-        const toyCount = await toyCol.countDocuments()
-        const userCount = await userCol.countDocuments()
-        res.send({ ok: true, toyCount, userCount })
-    } catch (err) {
-        console.error('HEALTH ERROR:', err)
-        res.status(500).send({ ok: false, error: String(err?.message || err) })
-    }
-})
-
-
-const devOrigins = [
-    'http://127.0.0.1:5173',
-    'http://localhost:5173',
-    'http://127.0.0.1:3000',
-    'http://localhost:3000',
-]
-
-const origins = isProd
-    ? (process.env.ORIGIN || '')
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean)
-    : devOrigins
+const origins = (process.env.ORIGIN || '').split(',').map(s => s.trim()).filter(Boolean)
 
 app.set('trust proxy', 1)
-
 app.use((req, res, next) => {
-    const origin = req.headers.origin
-    if (origin && origins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin)
-        res.header('Access-Control-Allow-Credentials', 'true')
-        res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
-        res.header('Vary', 'Origin')
-    }
-    if (req.method === 'OPTIONS') return res.sendStatus(204)
+    res.header('Access-Control-Allow-Credentials', 'true')
     next()
 })
+app.use(cors({
+    origin: function (origin, cb) {
+        if (!origin) return cb(null, true)
+        if (origins.length === 0) return cb(null, true)
+        if (origins.includes(origin)) return cb(null, true)
+        return cb(new Error('Not allowed by CORS'))
+    },
+    credentials: true
+}))
 
-app.use(cookieParser())
 app.use(express.json())
+app.use(cookieParser())
 
-if (isProd) {
-    app.use(express.static(path.resolve(__dirname, 'public')))
-} else {
-    app.use(express.static('public'))
-}
+app.get('/healthz', (req, res) => res.status(200).send('ok'))
 
 app.use('/api/auth', authRoutes)
 app.use('/api/user', userRoutes)
-app.use('/api/car', carRoutes)
 app.use('/api/toy', toyRoutes)
 app.use('/api/review', reviewRoutes)
 
-app.get(/^(?!\/api\/).*/, (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'public', 'index.html'))
-})
+    ; (async () => {
+        try {
+            const mod = await import('./api/car/car.routes.js')
+            if (mod && mod.carRoutes) app.use('/api/car', mod.carRoutes)
+        } catch { }
+    })()
+
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.resolve(__dirname, 'public')))
+    app.get(/^(?!\/api\/).*/, (req, res) => {
+        res.sendFile(path.resolve(__dirname, 'public', 'index.html'))
+    })
+}
 
 const port = process.env.PORT || 3030
-app.listen(port, () => logger.info(`Server listening on ${port}`))
+app.listen(port, '0.0.0.0', () => logger.info(`Server listening on ${port}`))
