@@ -1,5 +1,6 @@
 import { toyService } from './toy.service.js'
 import { logger } from '../../services/logger.service.js'
+import { getIO } from '../../services/socket.service.js'
 
 export async function getToys(req, res) {
     try {
@@ -32,6 +33,9 @@ export async function addToy(req, res) {
     try {
         const saved = await toyService.add(req.body)
         res.json(saved)
+        // notify all clients (admin action)
+        const io = getIO()
+        if (io) io.emit('admin:notify', { type: 'toy:add', id: saved._id, name: saved.name })
     } catch (err) {
         logger.error('Failed to add toy', err)
         res.status(500).send({ err: 'Failed to add toy' })
@@ -43,6 +47,9 @@ export async function updateToy(req, res) {
         const toy = { ...req.body, _id: req.params.id }
         const saved = await toyService.update(toy)
         res.json(saved)
+        // notify all clients (admin action)
+        const io = getIO()
+        if (io) io.emit('admin:notify', { type: 'toy:update', id: req.params.id, name: saved.name })
     } catch (err) {
         logger.error('Failed to update toy', err)
         res.status(500).send({ err: 'Failed to update toy' })
@@ -53,6 +60,9 @@ export async function removeToy(req, res) {
     try {
         const deletedCount = await toyService.remove(req.params.id)
         res.send(String(deletedCount))
+        // notify all clients (admin action)
+        const io = getIO()
+        if (io) io.emit('admin:notify', { type: 'toy:remove', id: req.params.id })
     } catch (err) {
         logger.error('Failed to remove toy', err)
         res.status(500).send({ err: 'Failed to remove toy' })
@@ -63,11 +73,15 @@ export async function addToyMsg(req, res) {
     try {
         const msg = {
             txt: req.body.txt,
+            // store minimal user info; your service already persists to toy.msgs
             by: req.loggedinUser,
             createdAt: Date.now()
         }
-        const saved = await toyService.addToyMsg(req.params.id, msg)
-        res.json(saved)
+        const savedMsg = await toyService.addToyMsg(req.params.id, msg)
+        res.json(savedMsg)
+        // broadcast to room (this toy)
+        const io = getIO()
+        if (io) io.to(req.params.id).emit('chat:new', savedMsg || msg)
     } catch (err) {
         logger.error('Failed to add toy msg', err)
         res.status(500).send({ err: 'Failed to add toy msg' })
