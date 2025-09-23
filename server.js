@@ -13,6 +13,8 @@ logger.info('server.js loaded...')
 
 const app = express()
 
+console.log('ALLOWED_ORIGINS=', process.env.ALLOWED_ORIGINS)
+
 if (process.env.NODE_ENV === 'production') {
     const allowlist = (process.env.ALLOWED_ORIGINS || '')
         .split(',')
