@@ -7,7 +7,7 @@ if (!fs.existsSync(logsDir)) {
 
 export const logger = {
     debug(...args) {
-        if (process.env.NODE_NEV === 'production') return
+        if (process.env.NODE_ENV === 'production') return
         _doLog('DEBUG', ...args)
     },
     info(...args) {

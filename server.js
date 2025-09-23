@@ -13,6 +13,10 @@ import { logger } from './services/logger.service.js'
 logger.info('server.js loaded...')
 
 const app = express()
+const allowlist = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean)
+if (allowlist.length) {
+    app.use(cors({ origin: allowlist, credentials: true }))
+}
 
 // Express App Config
 app.use(cookieParser())
