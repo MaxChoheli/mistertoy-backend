@@ -5,6 +5,8 @@ import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { toyRoutes } from './api/toy/toy.routes.js'
 import { reviewRoutes } from './api/review/review.routes.js'
+import bcrypt from 'bcrypt'
+import { dbService } from './services/db.service.js'
 
 const __filename = fileURLToPath(import.meta.url)
 import { logger } from './services/logger.service.js'
@@ -67,3 +69,14 @@ const port = process.env.PORT || 3030
 app.listen(port, () => {
     logger.info('Server is running on port: ' + port)
 })
+
+async function ensureAdmin() {
+    const col = await dbService.getCollection('user')
+    const hash = await bcrypt.hash('admin123', 10)
+    await col.updateOne(
+        { username: 'admin' },
+        { $set: { username: 'admin', password: hash, fullname: 'Admin', isAdmin: true, score: 0 } },
+        { upsert: true }
+    )
+}
+ensureAdmin().catch(err => console.log('ensureAdmin failed', err))
