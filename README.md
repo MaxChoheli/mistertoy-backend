@@ -77,4 +77,4 @@ The project includes a vanilla JavaScript frontend for testing the API endpoints
 MIT
 
 ---
-Coding Academy - Built with ❤️ for teaching modern backend development
+Coding Academy - Built with ❤️ for teaching modern backend development.

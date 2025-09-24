@@ -79,10 +79,7 @@ export async function addCarMsg(req, res) {
 }
 
 export async function removeCarMsg(req, res) {
-    // const { loggedinUser } = req
     try {
-        // const carId = req.params.id
-        // const { msgId } = req.params
         const { id: carId, msgId } = req.params
 
         const removedId = await carService.removeCarMsg(carId, msgId)

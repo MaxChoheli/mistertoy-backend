@@ -106,8 +106,8 @@ async function addToyMsg(toyId, msg) {
         const toPush = {
             id: utilService.makeId(),
             txt: msg.txt,
-            by: msg.by?._id || msg.by,         // store the user id
-            fullname: msg.by?.fullname || msg.fullname || '', // nice to have
+            by: msg.by?._id || msg.by,          
+            fullname: msg.by?.fullname || msg.fullname || '',
             createdAt: msg.createdAt || Date.now(),
         }
         await col.updateOne(

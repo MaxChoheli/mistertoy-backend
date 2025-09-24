@@ -41,7 +41,6 @@ async function save(car) {
     if (car._id) {
         savedCar = await storageService.put(STORAGE_KEY, car)
     } else {
-        // Later, owner is set by the backend
         car.owner = userService.getLoggedinUser()
         savedCar = await storageService.post(STORAGE_KEY, car)
     }
@@ -49,7 +48,6 @@ async function save(car) {
 }
 
 async function addCarMsg(carId, txt) {
-    // Later, this is all done by the backend
     const car = await getById(carId)
     if (!car.msgs) car.msgs = []
 
@@ -72,8 +70,7 @@ function getEmptyCar() {
 }
 
 
-// TEST DATA
-// storageService.post(STORAGE_KEY, {vendor: 'Subali Rahok 2', price: 980}).then(x => console.log(x))
+
 
 
 
